@@ -14,6 +14,7 @@ class Setup_Install_Product extends Model
     const TABLE_ATTRIBUTE_GROUP_VALUE = 'attribute_group_value';
     const TABLE_ATTRIBUTE_OPTION = 'attribute_option';
     const TABLE_PRODUCT = 'product';
+    const TABLE_PRODUCT_MEDIA = 'product_media';
     const TABLE_PRODUCT_CAT = 'product_category';
     const TABLE_PRODUCT_OPTION = 'product_option';
     const TABLE_PRODUCT_OPTION_VALUE = 'product_option_value';
@@ -34,8 +35,8 @@ class Setup_Install_Product extends Model
         }
     }
 
-    public function attributeTableConstruct(){
-        return array(
+    public function createAttributeTable(){
+        $table_construct = array(
             'table' => self::TABLE_ATTRIBUTE,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -51,9 +52,7 @@ class Setup_Install_Product extends Model
             ),
 
         );
-    }
-    public function createAttributeTable(){
-        return $this->createTableQuery('attributeTableConstruct','createAttributeOptionTable',false);
+        return $this->createTableQuery($table_construct,'createAttributeOptionTable',false);
     }
     public function attributeOptionTableConstruct(){
         return array(
@@ -73,10 +72,25 @@ class Setup_Install_Product extends Model
         );
     }
     public function createAttributeOptionTable(){
-        return $this->createTableQuery('attributeOptionTableConstruct','createAttributeSetTable',false);
+        $table_construct = array(
+            'table' => self::TABLE_ATTRIBUTE_OPTION,
+            'rows' => array(
+                'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'attribute_id' => 'SMALLINT(5) NOT NULL',
+                'value' => 'VARCHAR(255)',
+            ),
+            'references' => array(
+                'attribute_id' => array(
+                    'table' =>self::TABLE_ATTRIBUTE,
+                    'row' => 'id',
+                )
+            ),
+
+        );
+        return $this->createTableQuery($table_construct,'createAttributeSetTable',false);
     }
-    public function attributeSetTableConstruct(){
-        return array(
+    public function createAttributeSetTable(){
+        $table_construct =array(
             'table' => self::TABLE_ATTRIBUTE_SET,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -85,12 +99,10 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createAttributeGroupTable',false);
     }
-    public function createAttributeSetTable(){
-        return $this->createTableQuery('attributeSetTableConstruct','createAttributeGroupTable',false);
-    }
-    public function attributeGroupTableConstruct(){
-        return array(
+    public function createAttributeGroupTable(){
+        $table_construct =array(
             'table' => self::TABLE_ATTRIBUTE_GROUP,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -105,12 +117,10 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createAttributeGroupValueTable',false);
     }
-    public function createAttributeGroupTable(){
-        return $this->createTableQuery('attributeGroupTableConstruct','createAttributeGroupValueTable',false);
-    }
-    public function attributeGroupValueTableConstruct(){
-        return array(
+    public function createAttributeGroupValueTable(){
+        $table_construct =array(
             'table' => self::TABLE_ATTRIBUTE_GROUP_VALUE,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -128,13 +138,10 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createProductTable',false);
     }
-    public function createAttributeGroupValueTable(){
-        return $this->createTableQuery('attributeGroupValueTableConstruct','createProductTable',false);
-    }
-    public function productTableConstruct()
-    {
-        return array(
+    public function createProductTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -154,14 +161,39 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createProductMediaTableConstruct',false);
     }
-    public function createProductTable(){
-        return $this->createTableQuery('productTableConstruct','createProductCategoryTable',false);
+
+    public function createProductMediaTableConstruct(){
+        require_once ('Core.php');
+        $table_construct = array(
+            'table' => self::TABLE_PRODUCT_MEDIA,
+            'rows' => array(
+                'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'product_id' => 'BIGINT NOT NULL',
+                'media_id' => 'BIGINT NOT NULL',
+                'status' => 'TINYINT(2)',
+                'is_thumbnail' => 'TINYINT(2)'
+            ),
+            'references' => array(
+                'media_id' => array(
+                    'table' =>Setup_Install_Core::TABLE_MEDIA,
+                    'row' => 'id',
+                ),
+                'product_id' => array(
+                    'table' =>self::TABLE_PRODUCT,
+                    'row' => 'id',
+                )
+            ),
+        );
+        return $this->createTableQuery($table_construct,'createProductCategoryTable',false);
+
     }
-    public function productCategoryTableConstruct()
-    {
+
+    public function createProductCategoryTable(){
         require_once ('Category.php');
-        return array(
+
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_CAT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -179,12 +211,10 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createProductOptionTable',false);
     }
-    public function createProductCategoryTable(){
-        return $this->createTableQuery('productCategoryTableConstruct','createProductOptionTable',false);
-    }
-    public function productOptionTableConstruct(){
-        return array(
+    public function createProductOptionTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_OPTION,
             'rows' => array(
                 'id' => 'INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -200,12 +230,10 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createProductOptionValueTable',false);
     }
-    public function createProductOptionTable(){
-        return $this->createTableQuery('productOptionTableConstruct','createProductOptionValueTable',false);
-    }
-    public function productOptionValueTableConstruct(){
-        return array(
+    public function createProductOptionValueTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_OPTION_VALUE,
             'rows' => array(
                 'id' => 'INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -222,12 +250,10 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
+        return $this->createTableQuery($table_construct,'createProductRelationTable',false);
     }
-    public function createProductOptionValueTable(){
-        return $this->createTableQuery('productOptionValueTableConstruct','createProductRelationTable',false);
-    }
-    public function productRelationTableConstruct(){
-        return array(
+    public function createProductRelationTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_RELATION,
             'rows' => array(
                 'id' => 'INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -245,13 +271,11 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
-    }
-    public function createProductRelationTable(){
-        return $this->createTableQuery('productRelationTableConstruct','createProductIntTable',false);
+        return $this->createTableQuery($table_construct,'createProductIntTable',false);
     }
 
-    public function productIntTableConstruct(){
-        return array(
+    public function createProductIntTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_INT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -271,12 +295,10 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createProductVarcharTable',false);
     }
-    public function createProductIntTable(){
-        return $this->createTableQuery('productIntTableConstruct','createProductVarcharTable',false);
-    }
-    public function productVarcharTableConstruct(){
-        return array(
+    public function createProductVarcharTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_VARCHAR,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -296,12 +318,10 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createProductTextTable',false);
     }
-    public function createProductVarcharTable(){
-        return $this->createTableQuery('productVarcharTableConstruct','createProductTextTable',false);
-    }
-    public function productTextTableConstruct(){
-        return array(
+    public function createProductTextTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_TEXT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -321,12 +341,10 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createProductDatetimeTable',false);
     }
-    public function createProductTextTable(){
-        return $this->createTableQuery('productTextTableConstruct','createProductDatetimeTable',false);
-    }
-    public function productDatetimeTableConstruct(){
-        return array(
+    public function createProductDatetimeTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_DATETIME,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -346,12 +364,10 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createProductDecimalTable',false);
     }
-    public function createProductDatetimeTable(){
-        return $this->createTableQuery('productDatetimeTableConstruct','createProductDecimalTable',false);
-    }
-    public function productDecimalTableConstruct(){
-        return array(
+    public function createProductDecimalTable(){
+        $table_construct = array(
             'table' => self::TABLE_PRODUCT_DECIMAL,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -371,10 +387,6 @@ class Setup_Install_Product extends Model
             ),
 
         );
+        return $this->createTableQuery($table_construct,'createCategoryTable',true);
     }
-    public function createProductDecimalTable(){
-        return $this->createTableQuery('productDecimalTableConstruct','createCategoryTable',true);
-    }
-
-
 }

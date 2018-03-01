@@ -5,6 +5,8 @@ class Setup_Install_Core extends Model{
     const TABLE_ADMIN_ACCOUNT = 'admin_account';
     const TABLE_CONFIG_DATA = 'config_data';
     const TABLE_CUSTOMER_GROUP = 'customer_group';
+    const TABLE_MEDIA = 'media_gallery';
+
     public function install($function)
     {
         if(method_exists($this,$function)){
@@ -16,8 +18,12 @@ class Setup_Install_Core extends Model{
             );
         }
     }
-    function setupDatabaseTableConstruct(){
-        return array(
+
+    function configDataTableConstruct(){
+
+    }
+    function createSetupDatabaseTable(){
+        $table_construct = array(
             'table' => self::TABLE_SETUP,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -25,9 +31,11 @@ class Setup_Install_Core extends Model{
                 'version' => 'VARCHAR(255) NOT NULL',
             ),
         );
+        return $this->createTableQuery($table_construct,'createAdminRoleTable');
     }
-    function adminRoleTableConstruct(){
-        return array(
+
+    function createAdminRoleTable(){
+        $table_construct = array(
             'table' => self::TABLE_ADMIN_ROLE,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -35,9 +43,18 @@ class Setup_Install_Core extends Model{
                 'role' => 'VARCHAR(255) NOT NULL',
             ),
         );
+        $result = $this->createTableQuery($table_construct,'createAdminAccountTable');
+        if($result['result'] == 'success'){
+            $add_data = $this->addDataDefaultTableAdminRole();
+            if($add_data['result'] != 'success'){
+                return $add_data;
+            }
+        }
+        return $result;
     }
-    function adminAccountTableConstruct(){
-        return array(
+
+    function createAdminAccountTable(){
+        $table_construct = array(
             'table' => self::TABLE_ADMIN_ACCOUNT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -60,10 +77,13 @@ class Setup_Install_Core extends Model{
                 ),
             ),
         );
+        return $this->createTableQuery($table_construct,'createCustomerGroupTable');
+
     }
 
-    function customerGroupTableConstruct(){
-        return array(
+
+    function createCustomerGroupTable(){
+        $table_construct = array(
             'table' => self::TABLE_CUSTOMER_GROUP,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -71,33 +91,7 @@ class Setup_Install_Core extends Model{
                 'label' => 'VARCHAR(32)'
             ),
         );
-    }
-
-    function configDataTableConstruct(){
-
-    }
-    function createSetupDatabaseTable(){
-        return $this->createTableQuery('setupDatabaseTableConstruct','createAdminRoleTable');
-    }
-
-    function createAdminRoleTable(){
-        $result = $this->createTableQuery('adminRoleTableConstruct','createAdminAccountTable');
-        if($result['result'] == 'success'){
-            $add_data = $this->addDataDefaultTableAdminRole();
-            if($add_data['result'] != 'success'){
-                return $add_data;
-            }
-        }
-        return $result;
-    }
-
-    function createAdminAccountTable(){
-        return $this->createTableQuery('adminAccountTableConstruct','createCustomerGroupTable');
-
-    }
-
-    function createCustomerGroupTable(){
-        $result = $this->createTableQuery('customerGroupTableConstruct','',true);
+        $result = $this->createTableQuery($table_construct,'createMediaGalleryTable');
         if($result['result'] == 'success'){
             $add_data = $this->addDataDefaultCustomerGroup();
             if($add_data['result'] != 'success'){
@@ -105,6 +99,17 @@ class Setup_Install_Core extends Model{
             }
         }
         return $result;
+    }
+    function createMediaGalleryTable(){
+        $table_construct = array(
+            'table' => self::TABLE_MEDIA,
+            'rows' => array(
+                'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'value' => 'VARCHAR(255) NOT NULL',
+            ),
+        );
+        return $this->createTableQuery($table_construct,'createCustomerGroupTable',true);
+
     }
     function addDataDefaultTableAdminRole(){
         $insert_data = array(

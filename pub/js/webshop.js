@@ -1,3 +1,14 @@
+$.validator.addMethod("valid_length", function (value, element) {
+        var len = value.length;
+        return len >= 8 && len <= 20;
+    }, "Please enter a between 8 and 20 character."
+);
+$.validator.addMethod("valid_username", function (value, element) {
+
+        return /^(?=.{8,20}$)(?![_.])(?!.*[_.]{2})([a-zA-Z0-9._]+)(?![_.])$/.test(value);
+    }, "Please enter a valid username."
+);
+
 $.extend({
     Webshop: function (options) {
         var defaults = {
@@ -43,6 +54,13 @@ $.extend({
                         consoleLog(settings.msgTryError);
                     }
                 });
+            })
+
+            $(document).on('click','#form-setup-web-submit',function () {
+                var check = $('#form-setup-web').valid();
+                if (!check) {
+                    return false;
+                }
             })
 
             $(document).on('click','#btn-retry-install-wrap',function () {

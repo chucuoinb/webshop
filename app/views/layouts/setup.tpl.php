@@ -41,11 +41,12 @@ $notice = $this->getNotice();
         </div>
         <div class="col-md-9 install-content">
             <div class="page-header clearfix border-bottom">
-                <h1 class="pull-left" id="install-content-title">Database Configuration</h1>
+                <h1 class="pull-left" id="js-install-content-title">Database Configuration</h1>
             </div>
             <div class="padding-10">
-                <div id="setup-config-database"><?php include Bootstrap::getTemplate('setup/config.tpl')?></div>
-                <div id="setup-install-database"><?php //include Bootstrap::getTemplate('setup/install.tpl')?></div>
+                <div id="js-setup-config-database"><?php //include Bootstrap::getTemplate('setup/config.tpl')?></div>
+                <div id="js-setup-install-database"><?php //include Bootstrap::getTemplate('setup/install.tpl')?></div>
+                <div id="js-setup-install-web"><?php include Bootstrap::getTemplate('setup/setup_web.tpl')?></div>
 
             </div>
         </div>

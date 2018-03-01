@@ -21,26 +21,6 @@ class Setup_Install_Category extends Model
     }
 
 
-    public function categoriesTableConstruct()
-    {
-        return array(
-            'table' => self::TABLE_CATEGORY,
-            'rows' => array(
-                'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'name' => 'VARCHAR(255) NOT NULL',
-                'status' => 'TINYINT(2)',
-                'parent_id' => 'BIGINT NOT NULL',
-                'level' => 'INT(11) NOT NULL',
-                'update_at' => 'DATETIME',
-                'create_at' => 'DATETIME',
-                'description' => 'TEXT',
-                'url_key' => 'VARCHAR(255) NOT NULL',
-                'position' => 'INT(11)',
-                'path' => 'VARCHAR(255)',
-                'product_count' => 'INT(11)'
-            ),
-        );
-    }
     public function cate(){
         return array(
             'table' => 'cate',
@@ -78,6 +58,23 @@ class Setup_Install_Category extends Model
     }
 
     public function createCategoryTable(){
-        return $this->createTableQuery('categoriesTableConstruct','createCategoryTable',true);
+        $table_construct = array(
+            'table' => self::TABLE_CATEGORY,
+            'rows' => array(
+                'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'name' => 'VARCHAR(255) NOT NULL',
+                'status' => 'TINYINT(2)',
+                'parent_id' => 'BIGINT NOT NULL',
+                'level' => 'INT(11) NOT NULL',
+                'update_at' => 'DATETIME',
+                'create_at' => 'DATETIME',
+                'description' => 'TEXT',
+                'url_key' => 'VARCHAR(255) NOT NULL',
+                'position' => 'INT(11)',
+                'path' => 'VARCHAR(255)',
+                'product_count' => 'INT(11)'
+            ),
+        );
+        return $this->createTableQuery($table_construct,'createCategoryTable',true);
     }
 }

@@ -45,7 +45,7 @@ class Bootstrap
             'Model.php'
         );
         foreach ($libs as $lib) {
-            $lib_path = _MODULE_APP_DIR_ . DS . 'libs' . DS . $lib;
+            $lib_path ='libs' . DS . $lib;
             if (file_exists($lib_path)) {
                 require_once $lib_path;
             }
@@ -191,6 +191,48 @@ class Bootstrap
             }
         }
         return $default;
+    }
+    public static function setConfig($key, $value = '')
+    {
+        $config_file = _MODULE_APP_DIR_ . DS . 'etc/config.json';
+        $success = false;
+        if (file_exists($config_file)) {
+
+            $config_string = file_get_contents($config_file);
+            $config_data   = @json_decode($config_string,true);
+            if ($config_data) {
+                $config_data[$key] = $value;
+                $config = json_encode($config_data);
+                try{
+                    $success = file_put_contents($config_file, $config);
+                } catch(Exception $e){
+                    self::log($e->getMessage());
+                }
+            }
+        }
+        return $success;
+    }
+
+    public static function unsetConfig($key)
+    {
+        $config_file = _MODULE_APP_DIR_ . DS . 'etc/config.json';
+        $success = true;
+        if (file_exists($config_file)) {
+
+            $config_string = file_get_contents($config_file);
+            $config_data   = @json_decode($config_string,true);
+            if ($config_data && isset($config_data[$key])) {
+                unset($config_data[$key]);
+                $config = json_encode($config_data);
+                try{
+                    $success = file_put_contents($config_file, $config);
+                } catch(Exception $e){
+                    $success = false;
+                    self::log($e->getMessage());
+                }
+            }
+        }
+        return $success;
     }
 
     public static function getVersionInstall()

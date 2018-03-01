@@ -16,7 +16,6 @@ class Controller_Setup extends Controller
         'product',
         'customer',
         'order',
-        'media',
         'extend',
     );
     protected $_nextInstall = array(
@@ -24,8 +23,7 @@ class Controller_Setup extends Controller
         'category' => 'product',
         'product' => 'customer',
         'customer' => 'order',
-        'order' => 'media',
-        'media' => 'extend',
+        'order' => 'extend',
         'extend' => false,
     );
     public function prepareProcess()
@@ -164,18 +162,14 @@ class Controller_Setup extends Controller
             ),
             'customer' => array(
                 'status' => 'process',
-                'function'=> 'customer',
+                'function'=> 'createCustomerTable',
             ),
             'order' => array(
                 'status' => 'process',
-                'function'=> 'order',
-            ),
-            'media' => array(
-                'status' => 'process',
-                'function' => 'mediaGallery',
+                'function'=> 'createOrderTable',
             ),
             'extend' => array(
-                'status' => 'process',
+                'status' => 'success',
                 'function' => '',
             ),
 

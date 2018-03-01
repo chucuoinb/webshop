@@ -119,3 +119,10 @@
     color: #ffff00;
     font-size: 12px
 }
+#setup-admin-url{
+    display: inline-block;
+}
+#setup-admin-url input{
+    display: inline-block !important;
+    width: auto !important;
+}

@@ -21,9 +21,9 @@ class Setup_Install_Customer extends Model
         }
     }
 
-    public function customerTableConstruct(){
+    public function createCustomerTable(){
         require_once ('Core.php');
-        return array(
+        $table_construct = array(
             'table' => self::TABLE_CUSTOMER,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -50,10 +50,11 @@ class Setup_Install_Customer extends Model
                 ),
             ),
         );
-    }
+        return $this->createTableQuery($table_construct,'createCustomerAddressTable');
 
-    public function customerAddressTableConstruct(){
-        return array(
+    }
+    public function createCustomerAddressTable(){
+        $table_construct = array(
             'table' => self::TABLE_CUSTOMER_ADDRESS,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
@@ -76,5 +77,7 @@ class Setup_Install_Customer extends Model
                 ),
             ),
         );
+        return $this->createTableQuery($table_construct,'',true);
+
     }
 }
