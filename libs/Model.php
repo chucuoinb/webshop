@@ -115,6 +115,15 @@ class Model {
 
     }
 
+    public function getConfig($key,$default = ''){
+        return Bootstrap::getConfig($key,$default);
+    }
+    public function setConfig($key,$data){
+        return Bootstrap::setConfig($key,$data);
+    }
+    public function unsetConfig($key){
+        return Bootstrap::unsetConfig($key);
+    }
     public function errorConnectDatabase($msg = null){
         return array(
             'result' => 'error',
@@ -159,8 +168,7 @@ class Model {
         );
     }
 
-    function createTableQuery($construct,$next_function,$finish = false){
-        $table_construct = $this->$construct();
+    function createTableQuery($table_construct,$next_function,$finish = false){
         $query = $this->arrayToCreateTableSql($table_construct);
         if($query['result'] != 'success' || !isset($query['query'])){
             return $this->errorConnectDatabase();

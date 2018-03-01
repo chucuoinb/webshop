@@ -142,4 +142,13 @@ class Controller
         );
         $this->responseAjaxJson($response);
     }
+    public function getConfig($key,$default = ''){
+        return Bootstrap::getConfig($key,$default);
+    }
+    public function setConfig($key,$data){
+        return Bootstrap::setConfig($key,$data);
+    }
+    public function unsetConfig($key){
+        return Bootstrap::unsetConfig($key);
+    }
 }
