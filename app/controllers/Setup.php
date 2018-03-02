@@ -45,11 +45,11 @@ class Controller_Setup extends Controller
         if($function && method_exists($this,$function)){
             $this->$function();
         }else{
-            $this->responseSuccess();
+            $this->responseError();
         }
 
     }
-    function configDatabase(){
+    protected function configDatabase(){
         $msg = '';
         $host = $this->getParam('host');
         $username = $this->getParam('username') ;
@@ -95,7 +95,7 @@ class Controller_Setup extends Controller
         }
     }
 
-    function installDatabase(){
+    protected function installDatabase(){
 
         $notice = $this->getNotice();
         $class_install = $notice['class_install'];
@@ -122,7 +122,12 @@ class Controller_Setup extends Controller
             }
             $next_install = $this->_nextInstall[$class_install];
             if(!$next_install){
-                $this->responseSuccess();
+                $template_path = Bootstrap::getTemplate('setup/setup_web.tpl');
+                ob_start();
+                include $template_path;
+                $html = ob_get_contents();
+                ob_end_clean();
+                $this->responseSuccess($html);
             }
             $notice[$class_install]['status'] = 'success';
             $notice['class_install'] = $next_install;
@@ -134,7 +139,12 @@ class Controller_Setup extends Controller
         }
         $next_install = $this->_nextInstall[$class_install];
         if(!$next_install){
-            $this->responseSuccess();
+            $template_path = Bootstrap::getTemplate('setup/setup_web.tpl');
+            ob_start();
+            include $template_path;
+            $html = ob_get_contents();
+            ob_end_clean();
+            $this->responseSuccess($html);
         }
         $notice[$class_install]['status'] = 'success';
         $notice['class_install'] = $next_install;
@@ -145,7 +155,35 @@ class Controller_Setup extends Controller
         ));
     }
 
-    function getDefaultNotice(){
+    protected function createAdminAccount(){
+        $admin_url = $this->getParam('admin_url');
+        $admin_account = $this->getParam('admin_account');
+        $admin_password = $this->getParam('admin_password');
+        $admin_firstname = $this->getParam('admin_first_name');
+        $admin_lastname = $this->getParam('admin_last_name');
+        if($admin_url && $admin_account && $admin_password){
+            $this->setConfig('admin_url',$admin_url);
+            $model_account = Bootstrap::getModel('account');
+            $data = array(
+                'username' => $admin_account,
+                'password' => $admin_password,
+                'first_name' => $admin_firstname,
+                'last_name' => $admin_lastname,
+                'role_id' => 1,
+            );
+            $model_account->setData($data);
+            try{
+                $model_account->save();
+                $this->responseSuccess();
+            }catch (Exception $e){
+                $this->responseError('',$e->getMessage());
+            }
+        }else{
+            $this->responseError('','Missing data');
+        }
+    }
+
+    protected function getDefaultNotice(){
         return array(
             'class_install' => 'core',
             'core' => array(
@@ -175,7 +213,7 @@ class Controller_Setup extends Controller
 
         );
     }
-    function getNotice(){
+    protected function getNotice(){
         $notice = Session::getKey('notice');
         if($notice){
             return json_decode($notice,true);
@@ -183,10 +221,11 @@ class Controller_Setup extends Controller
         return $this->getDefaultNotice();
 
     }
-    function saveNotice($notice){
+    protected function saveNotice($notice){
         Session::setKey('notice',json_encode($notice));
     }
-    function deleteNotice(){
+    protected function deleteNotice(){
         Session::unsetKey('notice');
     }
+
 }

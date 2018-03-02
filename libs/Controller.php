@@ -151,4 +151,13 @@ class Controller
     public function unsetConfig($key){
         return Bootstrap::unsetConfig($key);
     }
+    public function passwordHash($password){
+        return md5($password);
+    }
+    public function getNewDate($time = null){
+        if($time){
+            return date("Y-m-d H:i:s",$time);
+        }
+        return date("Y-m-d H:i:s");
+    }
 }

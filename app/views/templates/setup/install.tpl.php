@@ -11,7 +11,7 @@
         <div id="btn-retry-install-wrap" class="btn btn-submit">Retry</div>
     </div>
     <div class="form-install-submit">
-        <div class="form-loading display-none" id="form-loading"><img
+        <div class="form-loading" id="form-loading"><img
                     src="<?php echo Bootstrap::getUrl('pub/image/help/loader-large.gif'); ?>"/> Connecting ...
         </div>
         <div class="btn btn-install btn-submit display-none" id="form-install-db-submit">Next</div>

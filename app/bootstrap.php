@@ -36,7 +36,7 @@ class Bootstrap
     {
         $libs = array(
             'Controller.php',
-            'Detected.php',
+            'AbstractModel.php',
             'Db.php',
             'Db/Mysql.php',
             'Db/Mysqli.php',
@@ -45,7 +45,7 @@ class Bootstrap
             'Model.php'
         );
         foreach ($libs as $lib) {
-            $lib_path ='libs' . DS . $lib;
+            $lib_path =_MODULE_ROOT_.'libs' . DS . $lib;
             if (file_exists($lib_path)) {
                 require_once $lib_path;
             }
@@ -56,7 +56,7 @@ class Bootstrap
 
     public static function getUrl($suffix = null, $params = null)
     {
-        $base_url = Detected::getBaseUrl();
+        $base_url = Bootstrap::getBaseUrl();
         $url      = $base_url;
         if ($suffix) {
             $url .= '/' . $suffix;
@@ -273,5 +273,41 @@ class Bootstrap
             return $connect?true:false;
         }
         return false;
+    }
+    public static function getBaseUrl()
+    {
+        if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
+            $pageURL = "https://";
+        } else
+            $pageURL = "http://";
+        if ($_SERVER["SERVER_PORT"] != "80") {
+            $pageURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . dirname($_SERVER["SCRIPT_NAME"]);
+        } else {
+            $pageURL .= $_SERVER["SERVER_NAME"] . dirname($_SERVER["SCRIPT_NAME"]);
+        }
+        return $pageURL;
+    }
+    public static function getModel($name = null)
+    {
+        if(!$name){
+            return null;
+        }
+        $model_folder = _MODULE_APP_DIR_ . DS . 'models';
+        $name = self::convertPathUppercase($name);
+        $model_path = str_replace('_', DS, $name);
+        $model_file = $model_folder . DS . $model_path . '.php';
+        if(file_exists($model_file)){
+            require_once $model_file;
+        }
+        $model_name = 'Model_' . $name;
+        $model = new $model_name();
+        return $model;
+    }
+    public static function convertPathUppercase($name, $char = '/')
+    {
+        $split = explode($char, $name);
+        $upper = array_map('ucfirst', $split);
+        $new_name = implode($char, $upper);
+        return $new_name;
     }
 }

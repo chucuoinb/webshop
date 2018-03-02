@@ -30,7 +30,7 @@ class Setup_Install_Order extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'status' => 'VARCHAR(32)',
-                'customer_id' => 'INT(10)',
+                'customer_id' => 'BIGINT',
                 'customer_first_name' => 'VARCHAR(255) NOT NULL',
                 'customer_last_name' => 'VARCHAR(255) NOT NULL',
                 'customer_telephone' => 'VARCHAR(255) NOT NULL',

@@ -215,7 +215,7 @@ class Libs_Db_Mysqli
                 'data' => $result
             );
         } catch (Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysqli');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysqli');
             return array(
                 'result' => 'error',
                 'msg' => $e->getMessage(),
@@ -235,9 +235,10 @@ class Libs_Db_Mysqli
             );
         }
         try {
+//            print_r($query);exit;
             $result = mysqli_query($conn, $query);
             if(mysqli_errno($conn)){
-                Bootstrap::log(mysqli_error($conn), 'mysqli');
+                Bootstrap::log($query.'-'.mysqli_error($conn), 'mysqli');
                 return array(
                     'result' => 'error',
                     'msg' => mysqli_error($conn),
@@ -258,7 +259,7 @@ class Libs_Db_Mysqli
                 'data' => $result
             );
         } catch(Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysqli');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysqli');
             return array(
                 'result' => 'error',
                 'msg' => $e->getMessage(),
@@ -293,7 +294,7 @@ class Libs_Db_Mysqli
                 'data' => $result
             );
         } catch(Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysqli');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysqli');
             return array(
                 'result' => 'error',
                 'msg' => $e->getMessage(),

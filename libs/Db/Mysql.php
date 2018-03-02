@@ -219,7 +219,7 @@ class Libs_Db_Mysql
                 'data' => $result
             );
         } catch (Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysql');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysql');
             return array(
                 'result' => "error",
                 'msg' => $e->getMessage(),
@@ -262,7 +262,7 @@ class Libs_Db_Mysql
                 'data' => $result
             );
         } catch(Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysql');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysql');
             return array(
                 'result' => 'success',
                 'msg' => $e->getMessage(),
@@ -297,7 +297,7 @@ class Libs_Db_Mysql
                 'data' => $result
             );
         } catch(Exception $e){
-            Bootstrap::log($e->getMessage(), 'mysql');
+            Bootstrap::log($query.'-'.$e->getMessage(), 'mysql');
             return array(
                 'result' => 'error',
                 'msg' => $e->getMessage(),

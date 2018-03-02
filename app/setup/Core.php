@@ -64,7 +64,7 @@ class Setup_Install_Core extends Model{
                 'last_name' => 'VARCHAR(255) ',
                 'create_at' => 'DATETIME',
                 'update_at' => 'DATETIME',
-                'is_active' => 'DATETIME',
+                'is_active' => 'TINYINT(2)',
                 'log_date' => 'LONGTEXT',
                 'token' => 'TEXT',
                 'role_id' => 'BIGINT NOT NULL',

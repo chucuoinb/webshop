@@ -13,8 +13,8 @@ $.extend({
     Webshop: function (options) {
         var defaults = {
             url: '',
-            errorMsg: 'Request timeout or server isn\'t responding, please reload the page.',
-            msgTryError: '<p class="console-error">Request timeout or server isn\'t responding, please try again.</p>',
+            errorMsg: 'Something error or server isn\'t responding, please try again.',
+            msgTryError: '<p class="console-error">Something error or server isn\'t responding, please try again.</p>',
             msgTryWarning: '<p class="console-warning">Please try again.</p>',
             msgTryInstall: '<p class="console-success"> - Resuming install ...</p>',
             delay: 1000,
@@ -28,7 +28,9 @@ $.extend({
                 if (!check) {
                     return false;
                 }
-                showElement($('#form-loading'));
+                var loading = $('.form-loading');
+                loading.show();
+
                 var from_data =  $('#form-config-db').serialize();
                 $.ajax({
                     url: settings.url,
@@ -36,22 +38,24 @@ $.extend({
                     dataType: 'json',
                     data: from_data,
                     success: function (response, textStatus, errorThrown) {
-                        hideElement($('#form-loading'));
+                        loading.hide();
+
                         if (response.result == 'success') {
-                            $('#setup-install-database').html(response.data);
-                            $('#install-content-title').text('Install Database')
-                            $('#setup-install-database').show();
-                            $('#setup-config-database').hide();
-                            successInstall($('#install-title-config'));
-                            activeInstall($('#install-title-install'));
+                            $('#js-setup-install-database').html(response.data);
+                            $('#js-install-content-title').text('Install Database')
+                            $('#js-setup-install-database').show();
+                            $('#js-setup-config-database').hide();
+                            successInstall('#install-title-config');
+                            activeInstall('#install-title-install');
                             setTimeout(installDatabase,settings.delay)
                         } else {
                             consoleLog(response.msg);
                         }
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        hideElement($('#form-loading'));
-                        consoleLog(settings.msgTryError);
+                        loading.hide();
+
+                        alert(settings.errorMsg);
                     }
                 });
             })
@@ -61,17 +65,41 @@ $.extend({
                 if (!check) {
                     return false;
                 }
+                var loading = $('#form-loading');
+
+                loading.show();
+                var from_data =  $('#form-setup-web').serialize();
+                $.ajax({
+                    url: settings.url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: from_data,
+                    success: function (response, textStatus, errorThrown) {
+                        if (response.result == 'success') {
+
+                        } else {
+                            var msg = response.msg.length>0?response.msg:settings.errorMsg;
+                            alert(msg);
+                        }
+                        loading.hide();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        loading.hide();
+                        consoleLog(settings.msgTryError);
+                    }
+                });
             })
 
             $(document).on('click','#btn-retry-install-wrap',function () {
-                hideElement($('#form-install-retry'));
+                hideElement('#form-install-retry');
                 consoleLog(settings.msgTryInstall);
                 installDatabase();
             });
         }
 
         function installDatabase() {
-            showElement($('#form-loading'));
+            var loading = $('#form-loading');
+            loading.show();
             var from_data =  $('#form-install-database').serialize();
             $.ajax({
                 url: settings.url,
@@ -79,28 +107,42 @@ $.extend({
                 dataType: 'json',
                 data: from_data,
                 success: function (response, textStatus, errorThrown) {
-                    hideElement($('#form-loading'));
+                    loading.hide();
+
                     if (response.result == 'process') {
                         if(response.msg){
                             consoleLog(response.msg);
                         }
                         setTimeout(installDatabase,settings.delay);
                     } else {
-                        consoleLog(response.msg);
-                        showElement($('#form-install-retry'));
+                        if(response.result != 'success'){
+
+                            consoleLog(response.msg);
+                            showElement('#form-install-retry');
+                        }else{
+                            $('#js-setup-install-web').html(response.data);
+                            $('#js-install-content-title').text('Create admin account')
+                            $('#js-setup-install-web').show();
+                            $('#js-setup-install-database').hide();
+                            successInstall('#install-title-install');
+                            activeInstall('#install-title-admin');
+                        }
 
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    hideElement($('#form-loading'));
+                    loading.hide();
+
                     consoleLog(settings.msgTryError);
-                    showElement($('#form-install-retry'));
+                    showElement('#form-install-retry');
                     autoRetry('btn-retry-install-wrap');
                 }
             });
         }
 
         function hideElement(element) {
+            element = $(element);
+
             if(element.hasClass('display-block')){
                 element.removeClass('display-block');
             }
@@ -109,6 +151,7 @@ $.extend({
             }
         }
         function showElement(element) {
+            element = $(element);
             if(element.hasClass('display-none')){
                 element.removeClass('display-none');
             }
@@ -117,6 +160,8 @@ $.extend({
             }
         }
         function successInstall(element){
+            element = $(element);
+
             if(element.hasClass('install-active')){
                 element.removeClass('install-active');
             }
@@ -125,6 +170,8 @@ $.extend({
             }
         }
         function activeInstall(element){
+            element = $(element);
+
             if(element.hasClass('install-success')){
                 element.removeClass('install-success');
             }
