@@ -49,7 +49,7 @@ $.extend({
                             activeInstall('#install-title-install');
                             setTimeout(installDatabase,settings.delay)
                         } else {
-                            consoleLog(response.msg);
+                            alert(response.msg);
                         }
                     },
                     error: function (jqXHR, textStatus, errorThrown) {

@@ -133,10 +133,22 @@ class Model implements Abstract_Model {
 
     }
 
-    public function getVersionInstall($type){
-
+    function getVersionInstall($type)
+    {
+        $version = $this->selectTableRow('setup_database',array('type' => $type));
+        if($version){
+            return $version['version'];
+        }
+        return '0.0.0';
     }
-
+    function setVersionInstall($type,$version = '1.0.0')
+    {
+        $version = array(
+            'type' => $type,
+            'version' => $version,
+        );
+        return $this->insertTable('setup_database',$version);
+    }
     public function getConfig($key,$default = ''){
         return Bootstrap::getConfig($key,$default);
     }
@@ -208,6 +220,48 @@ class Model implements Abstract_Model {
             );
         }
         return $this->errorConnectDatabase($create['msg']);
+    }
+    protected function readCsv($file_path) {
+        if (!is_file($file_path)) {
+            return array(
+                'result' => 'error',
+                'msg' => 'Path not exists'
+            );
+        }
+        try {
+            $finish = false;
+            $count = 0;
+            $csv = fopen($file_path, 'r');
+            $csv_title = "";
+            $data = array();
+            while (!feof($csv)) {
+                $line = fgetcsv($csv);
+                if($line){
+                    if ($count == 0) {
+                        $csv_title = $line;
+                    }
+                    else {
+                        $data[] = array(
+                            'title' => str_replace(' ', '_', $csv_title),
+                            'row' => $line
+                        );
+                    }
+                    $count++;
+                }
+
+            }
+            fclose($csv);
+            return array(
+                'result' => 'success',
+                'data' => $data,
+                'finish' => $finish
+            );
+        } catch (Exception $e) {
+            return array(
+                'result' => 'error',
+                'msg' => $e->getMessage()
+            );
+        }
     }
     public function getNewDate($time = null){
         if($time){

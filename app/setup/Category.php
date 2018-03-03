@@ -74,6 +74,14 @@ class Setup_Install_Category extends Model
                 'path' => 'VARCHAR(255)',
                 'product_count' => 'INT(11)'
             ),
+            'unique' => array(
+                array(
+                    'name',
+                ),
+                array(
+                    'url_key'
+                ),
+            ),
         );
         return $this->createTableQuery($table_construct,'createCategoryTable',true);
     }

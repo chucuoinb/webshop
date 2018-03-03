@@ -99,7 +99,8 @@ class Controller_Setup extends Controller
 
         $notice = $this->getNotice();
         $class_install = $notice['class_install'];
-        if($notice[$class_install]['status'] == 'process'){
+        $base_model = Bootstrap::getBaseModel();
+        if($notice[$class_install]['status'] == 'process' && version_compare($base_model->getVersionInstall($class_install),'1.0.0')<0){
             require_once _MODULE_APP_DIR_ . DS . 'setup' . DS . ucfirst($class_install).'.php';
             $class_name = 'Setup_Install_'.ucfirst($class_install);
             $install = new $class_name();
@@ -137,6 +138,7 @@ class Controller_Setup extends Controller
                 'msg' => $msg,
             ));
         }
+        $base_model->setVersionInstall($class_install);
         $next_install = $this->_nextInstall[$class_install];
         if(!$next_install){
             $template_path = Bootstrap::getTemplate('setup/setup_web.tpl');

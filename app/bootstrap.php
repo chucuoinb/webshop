@@ -303,6 +303,12 @@ class Bootstrap
         $model = new $model_name();
         return $model;
     }
+    public static function getBaseModel()
+    {
+        $model_name = 'Model';
+        $model = new $model_name();
+        return $model;
+    }
     public static function convertPathUppercase($name, $char = '/')
     {
         $split = explode($char, $name);

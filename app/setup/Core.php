@@ -6,6 +6,7 @@ class Setup_Install_Core extends Model{
     const TABLE_CONFIG_DATA = 'config_data';
     const TABLE_CUSTOMER_GROUP = 'customer_group';
     const TABLE_MEDIA = 'media_gallery';
+    const TABLE_URL_REWRITE = 'url_rewrite';
 
     public function install($function)
     {
@@ -27,8 +28,13 @@ class Setup_Install_Core extends Model{
             'table' => self::TABLE_SETUP,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'name' => 'VARCHAR(255) NOT NULL',
+                'type' => 'VARCHAR(255) NOT NULL',
                 'version' => 'VARCHAR(255) NOT NULL',
+            ),
+            'unique' => array(
+                array(
+                    'type','version'
+                ),
             ),
         );
         return $this->createTableQuery($table_construct,'createAdminRoleTable');
@@ -41,6 +47,11 @@ class Setup_Install_Core extends Model{
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'name' => 'VARCHAR(255) NOT NULL',
                 'role' => 'VARCHAR(255) NOT NULL',
+            ),
+            'unique' => array(
+                array(
+                    'name'
+                ),
             ),
         );
         $result = $this->createTableQuery($table_construct,'createAdminAccountTable');
@@ -76,6 +87,11 @@ class Setup_Install_Core extends Model{
                     'row' => 'id',
                 ),
             ),
+            'unique' => array(
+                array(
+                    'username',
+                ),
+            ),
         );
         return $this->createTableQuery($table_construct,'createCustomerGroupTable');
 
@@ -89,6 +105,11 @@ class Setup_Install_Core extends Model{
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'code' => 'VARCHAR(32) NOT NULL',
                 'label' => 'VARCHAR(32)'
+            ),
+            'unique' => array(
+                array(
+                    'code',
+                ),
             ),
         );
         $result = $this->createTableQuery($table_construct,'createMediaGalleryTable');
@@ -107,9 +128,34 @@ class Setup_Install_Core extends Model{
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'value' => 'VARCHAR(255) NOT NULL',
             ),
+            'unique' => array(
+                array(
+                    'value',
+                ),
+            ),
+        );
+        return $this->createTableQuery($table_construct,'createUrlRewrite');
+
+    }
+    function createUrlRewrite(){
+        $table_construct = array(
+            'table' => self::TABLE_URL_REWRITE,
+            'rows' => array(
+                'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'parent_id' => 'INT(11)',
+                'type' => 'VARCHAR(32)',
+                'url' => 'VARCHAR(255) NOT NULL',
+                'controller' => 'VARCHAR(255) NOT NULL',
+                'redirect_type' => 'SMALLINT(5)',
+                'is_default' => 'TINYINT(2)',
+            ),
+            'unique' => array(
+                array(
+                    'url',
+                ),
+            ),
         );
         return $this->createTableQuery($table_construct,'createCustomerGroupTable',true);
-
     }
     function addDataDefaultTableAdminRole(){
         $insert_data = array(
@@ -166,4 +212,5 @@ class Setup_Install_Core extends Model{
             'super_admin' => true,
         ));
     }
+
 }

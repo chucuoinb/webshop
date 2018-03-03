@@ -341,10 +341,14 @@ class Libs_Db_Mysqli
         $table_name = $this->getTableName($table);
         $data_condition = $this->arrayToInsertCondition($data);
         if(!$data_condition){
-            return false;
+            array(
+                'result' => 'error',
+                'msg' => 'no condition',
+                'data' => null
+            );
         }
         $query = "INSERT INTO `" . $table_name . "` " . $data_condition;
-        return $this->insertRaw($query, $insert_id);
+       return $this->insertRaw($query, $insert_id) ;
     }
 
     public function updateObj($table, $data, $where = null)
@@ -538,6 +542,7 @@ class Libs_Db_Mysqli
         $table = $array['table'];
         $rowData = $array['rows'];
         $referenceData = isset($array['references'])?$array['references']:array();
+        $uniqueData = isset($array['unique'])?$array['unique']:array();
         if(!$table || !$rowData){
             return array(
                 'result' => 'error',
@@ -553,6 +558,19 @@ class Libs_Db_Mysqli
         foreach ($referenceData as $row_reference => $data_reference){
             $references[] = "FOREIGN KEY (".$row_reference.") REFERENCES ".$this->getTableName($data_reference['table'])."(".$data_reference['row'].")";
         }
+        $unique = array();
+        foreach ($uniqueData as $data){
+            $name = '';
+            $fields = array();
+            foreach ($data as $field){
+                $name .= $name?'-'.strtoupper($field):strtoupper($field);
+
+                $fields[] = "`{$field}`";
+            }
+            $str_unique = "UNIQUE `{$name}` ( ";
+            $str_unique .= implode(',',$fields).')';
+            $unique[] = $str_unique;
+        }
         $table_name = $this->getTableName($table);
         $query = "CREATE TABLE IF NOT EXISTS {$table_name} (";
         $query .= implode(',', $rows);
@@ -560,6 +578,11 @@ class Libs_Db_Mysqli
             $query .= ",";
         }
         $query .= implode(',', $references);
+        if(count($unique)){
+            $query .= ",";
+        }
+        $query .= implode(',', $unique);
+
         $query .= ")";
         if(isset($array['meta'])){
             $query .= " " . $array['meta'];

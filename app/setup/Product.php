@@ -12,6 +12,7 @@ class Setup_Install_Product extends Model
     const TABLE_ATTRIBUTE_SET = 'attribute_set';
     const TABLE_ATTRIBUTE_GROUP = 'attribute_group';
     const TABLE_ATTRIBUTE_GROUP_VALUE = 'attribute_group_value';
+    const TABLE_ATTRIBUTE_SET_VALUE = 'attribute_set_value';
     const TABLE_ATTRIBUTE_OPTION = 'attribute_option';
     const TABLE_PRODUCT = 'product';
     const TABLE_PRODUCT_MEDIA = 'product_media';
@@ -50,26 +51,14 @@ class Setup_Install_Product extends Model
                 'is_unique' => 'TINYINT(2)',
                 'default_value' => 'TEXT',
             ),
+            'unique' => array(
+                array(
+                    'code'
+                ),
+            ),
 
         );
         return $this->createTableQuery($table_construct,'createAttributeOptionTable',false);
-    }
-    public function attributeOptionTableConstruct(){
-        return array(
-            'table' => self::TABLE_ATTRIBUTE_OPTION,
-            'rows' => array(
-                'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'value' => 'VARCHAR(255)',
-            ),
-            'references' => array(
-                'attribute_id' => array(
-                    'table' =>self::TABLE_ATTRIBUTE,
-                    'row' => 'id',
-                )
-            ),
-
-        );
     }
     public function createAttributeOptionTable(){
         $table_construct = array(
@@ -85,6 +74,11 @@ class Setup_Install_Product extends Model
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'attribute_id','value'
+                ),
+            ),
 
         );
         return $this->createTableQuery($table_construct,'createAttributeSetTable',false);
@@ -97,10 +91,43 @@ class Setup_Install_Product extends Model
                 'code' => 'VARCHAR(255) NOT NULL',
                 'label' => 'VARCHAR(255)',
             ),
+            'unique' => array(
+                array(
+                    'code'
+                ),
+            ),
 
         );
-        return $this->createTableQuery($table_construct,'createAttributeGroupTable',false);
+        $result = $this->createTableQuery($table_construct,'createAttributeSetValueTable',false);
+        if($result['result'] == 'success'){
+            $add_data = $this->addAttributeSetDefault();
+            if($add_data['result'] != 'success'){
+                return $add_data;
+            }
+        }
+//        print_r($result);exit;
+        return $result;
     }
+
+    public function addAttributeSetDefault(){
+        $data = array(
+            'code' => 'default',
+            'label' => 'Default',
+        );
+        $truncate = $this->truncateTable(self::TABLE_ATTRIBUTE_SET);
+        if(!$truncate || $truncate['result'] != 'success'){
+            return $this->errorConnectDatabase($truncate['msg']);
+        }
+        $res = $this->insertTable(self::TABLE_ATTRIBUTE_SET,$data);
+        if(!$res || $res['result'] != 'success'){
+            return $this->errorConnectDatabase($res['msg']);
+        }
+        return array(
+            'result' => 'success',
+            'msg' => '',
+        );
+    }
+
     public function createAttributeGroupTable(){
         $table_construct =array(
             'table' => self::TABLE_ATTRIBUTE_GROUP,
@@ -117,19 +144,19 @@ class Setup_Install_Product extends Model
                 )
             ),
         );
-        return $this->createTableQuery($table_construct,'createAttributeGroupValueTable',false);
+        return $this->createTableQuery($table_construct,'createAttributeSetValueTable',false);
     }
-    public function createAttributeGroupValueTable(){
+    public function createAttributeSetValueTable(){
         $table_construct =array(
-            'table' => self::TABLE_ATTRIBUTE_GROUP_VALUE,
+            'table' => self::TABLE_ATTRIBUTE_SET_VALUE,
             'rows' => array(
                 'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
-                'attribute_group_id' => 'SMALLINT(5) NOT NULL',
+                'attribute_set_id' => 'SMALLINT(5) NOT NULL',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
             ),
             'references' => array(
-                'attribute_group_id' => array(
-                    'table' =>self::TABLE_ATTRIBUTE_GROUP,
+                'attribute_set_id' => array(
+                    'table' =>self::TABLE_ATTRIBUTE_SET,
                     'row' => 'id',
                 ),
                 'attribute_id' => array(
@@ -137,8 +164,20 @@ class Setup_Install_Product extends Model
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'attribute_set_id','attribute_id'
+                ),
+            ),
         );
-        return $this->createTableQuery($table_construct,'createProductTable',false);
+        $result = $this->createTableQuery($table_construct,'createProductTable',false);
+        if($result['result'] == 'success'){
+            $add_data = $this->addAttributeDefault();
+            if($add_data['result'] != 'success'){
+                return $add_data;
+            }
+        }
+        return $result;
     }
     public function createProductTable(){
         $table_construct = array(
@@ -158,6 +197,14 @@ class Setup_Install_Product extends Model
                 'attribute_set' => array(
                     'table' =>self::TABLE_ATTRIBUTE_GROUP,
                     'row' => 'id',
+                )
+            ),
+            'unique' => array(
+                array(
+                    'sku'
+                ),
+                array(
+                    'url_key'
                 )
             ),
         );
@@ -185,6 +232,11 @@ class Setup_Install_Product extends Model
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'product_id','media_id'
+                ),
+            ),
         );
         return $this->createTableQuery($table_construct,'createProductCategoryTable',false);
 
@@ -209,6 +261,11 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
+            ),
+            'unique' => array(
+                array(
+                    'category_id','product_id'
+                ),
             ),
         );
         return $this->createTableQuery($table_construct,'createProductOptionTable',false);
@@ -270,6 +327,11 @@ class Setup_Install_Product extends Model
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'parent_id','product_id'
+                ),
+            ),
         );
         return $this->createTableQuery($table_construct,'createProductIntTable',false);
     }
@@ -280,7 +342,7 @@ class Setup_Install_Product extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'parent_id' => 'BIGINT NOT NULL',
+                'product_id' => 'BIGINT NOT NULL',
                 'value' => 'INT(11)'
             ),
             'references' => array(
@@ -288,10 +350,15 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_ATTRIBUTE,
                     'row' => 'id',
                 ),
-                'parent_id' => array(
+                'product_id' => array(
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
+            ),
+            'unique' => array(
+                array(
+                    'product_id','attribute_id'
+                ),
             ),
 
         );
@@ -303,7 +370,7 @@ class Setup_Install_Product extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'parent_id' => 'BIGINT NOT NULL',
+                'product_id' => 'BIGINT NOT NULL',
                 'value' => 'VARCHAR(255)'
             ),
             'references' => array(
@@ -311,11 +378,17 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_ATTRIBUTE,
                     'row' => 'id',
                 ),
-                'parent_id' => array(
+                'product_id' => array(
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'product_id','attribute_id'
+                ),
+            ),
+
 
         );
         return $this->createTableQuery($table_construct,'createProductTextTable',false);
@@ -326,7 +399,7 @@ class Setup_Install_Product extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'parent_id' => 'BIGINT NOT NULL',
+                'product_id' => 'BIGINT NOT NULL',
                 'value' => 'TEXT'
             ),
             'references' => array(
@@ -334,11 +407,17 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_ATTRIBUTE,
                     'row' => 'id',
                 ),
-                'parent_id' => array(
+                'product_id' => array(
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'product_id','attribute_id'
+                ),
+            ),
+
 
         );
         return $this->createTableQuery($table_construct,'createProductDatetimeTable',false);
@@ -349,7 +428,7 @@ class Setup_Install_Product extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'parent_id' => 'BIGINT NOT NULL',
+                'product_id' => 'BIGINT NOT NULL',
                 'value' => 'datetime'
             ),
             'references' => array(
@@ -357,11 +436,17 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_ATTRIBUTE,
                     'row' => 'id',
                 ),
-                'parent_id' => array(
+                'product_id' => array(
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'product_id','attribute_id'
+                ),
+            ),
+
 
         );
         return $this->createTableQuery($table_construct,'createProductDecimalTable',false);
@@ -372,7 +457,7 @@ class Setup_Install_Product extends Model
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
                 'attribute_id' => 'SMALLINT(5) NOT NULL',
-                'parent_id' => 'BIGINT NOT NULL',
+                'product_id' => 'BIGINT NOT NULL',
                 'value' => 'DECIMAL(12,4)	'
             ),
             'references' => array(
@@ -380,13 +465,74 @@ class Setup_Install_Product extends Model
                     'table' =>self::TABLE_ATTRIBUTE,
                     'row' => 'id',
                 ),
-                'parent_id' => array(
+                'product_id' => array(
                     'table' =>self::TABLE_PRODUCT,
                     'row' => 'id',
                 )
             ),
+            'unique' => array(
+                array(
+                    'product_id','attribute_id'
+                ),
+            ),
+
 
         );
-        return $this->createTableQuery($table_construct,'createCategoryTable',true);
+        return $this->createTableQuery($table_construct,true);
+    }
+    public function addAttributeDefault(){
+        $truncate = $this->truncateTable(self::TABLE_ATTRIBUTE);
+        if(!$truncate || $truncate['result'] != 'success'){
+            return $this->errorConnectDatabase($truncate['msg']);
+        }
+        $truncate = $this->truncateTable(self::TABLE_ATTRIBUTE_SET_VALUE);
+        if(!$truncate || $truncate['result'] != 'success'){
+
+            return $this->errorConnectDatabase($truncate['msg']);
+        }
+        $file_attribute = _MODULE_DIR_.DS.'media'.DS.'attribute.csv';
+        $attribute_data = $this->readCsv($file_attribute);
+        if($attribute_data['result'] != 'success'){
+
+            return $this->errorConnectDatabase($attribute_data['msg']);
+        }
+        $attribute_datas = $attribute_data['data'];
+//        print_r($attribute_datas);exit;
+        foreach ($attribute_datas as $data){
+            $data = $this->syncCsvTitleRow($data['title'],$data['row']);
+            $insert = $this->insertTable(self::TABLE_ATTRIBUTE,$data);
+            if($insert['result'] != 'success'){
+//                var_dump($insert);exit;
+
+                return $this->errorConnectDatabase($insert['msg']);
+            }
+            $attribute_id = $insert['data'];
+            $attribute_set_data = array(
+                'attribute_set_id' => 1,
+                'attribute_id' => $attribute_id,
+            );
+            $insert = $this->insertTable(self::TABLE_ATTRIBUTE_SET_VALUE,$attribute_set_data);
+            if($insert['result'] != 'success'){
+
+                return $this->errorConnectDatabase($insert['msg']);
+            }
+        }
+        return array(
+            'result' => 'success',
+        );
+    }
+    protected function syncCsvTitleRow($csv_title, $csv_row) {
+        if (!$csv_row) {
+            return array();
+        }
+        $row_value = array_filter($csv_row);
+        if (!$row_value || empty($row_value)) {
+            return array();
+        }
+        $data = array();
+        foreach ($csv_title as $key => $title_name) {
+            $data[$title_name] = (isset($csv_row[$key])) ? $csv_row[$key] : null;
+        }
+        return $data;
     }
 }

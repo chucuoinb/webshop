@@ -110,6 +110,7 @@ class Controller
         echo json_encode($data);
         exit();
     }
+
     protected function defaultResponse()
     {
         return array(
