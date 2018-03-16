@@ -22,10 +22,14 @@ class Bootstrap
     public function run()
     {
         $controller = $this->getUri() ? $this->getUri() : 'index';
-//        if(isset($_POST[WEB_URI])){
-//    var_dump($controller);exit;
-//}
         $class      = self::getController($controller);
+        if(!$class){
+            $class = self::getController($controller,true);
+        }
+        if(!$class){
+            $base_controller = self::getBaseController();
+            $base_controller->redirect404();
+        }
         $class->prepareProcess();
         $class->run();
 
@@ -36,6 +40,7 @@ class Bootstrap
     {
         $libs = array(
             'Controller.php',
+            'Controller_Admin.php',
             'AbstractModel.php',
             'Db.php',
             'Db/Mysql.php',
@@ -71,12 +76,17 @@ class Bootstrap
         return $url;
     }
 
+    public static function getUrlAdmin($suffix = null, $params = null){
+        $suffix = $suffix?Bootstrap::getConfig('admin_url').'/'.$suffix:Bootstrap::getConfig('admin_url');
+        return Bootstrap::getUrl($suffix,$params);
+    }
+
     public static function getLayout($name = null)
     {
         if (!$name) {
-            $name = 'home.tpl';
+            $name = 'home';
         }
-        $layout_path = self::getView() . 'layouts' . DS . $name . '.php';
+        $layout_path = self::getView() . 'layouts' . DS . $name . '.tpl.php';
 
         return $layout_path;
     }
@@ -86,7 +96,7 @@ class Bootstrap
         if (!$name) {
             return false;
         }
-        $template_path = self::getView() . 'templates' . DS . $name . '.php';
+        $template_path = self::getView() . 'templates' . DS . $name . '.tpl.php';
 
         return $template_path;
     }
@@ -100,7 +110,15 @@ class Bootstrap
 
         return $view_path . $name;
     }
+    public static function getImages($name = null)
+    {
+        $view_path = self::getUrl() .DS. 'pub' . DS.'images'.DS;
+        if (!$name) {
+            return $view_path;
+        }
 
+        return $view_path . $name;
+    }
     public static function isSetup()
     {
         $config_file  = _MODULE_APP_DIR_ . DS . 'etc' . DS . 'config.json';
@@ -109,29 +127,66 @@ class Bootstrap
     }
 
 
-    public static function getController($controller_name)
+    public static function getController($controller_name,$rewrite = false)
     {
-        $controller_explode = explode('/', $controller_name);
-        $len                = count($controller_explode);
-        if ($len == 1) {
-            $controller_path = ucfirst($controller_name);
-        } else {
+        if($rewrite){
+            $model_rewrite = self::getModel('UrlRewrite');
+            $filter = $model_rewrite->addFieldToFilter('url',$controller_name)->filter();
+            if($filter){
+                $model_rewrite->load($filter[0]['id']);
+                $controller_name = $model_rewrite->getController();
 
-            $controller_path = '';
-            foreach ($controller_explode as $path) {
-                if ($controller_path) {
-                    $controller_path .= ucfirst($path) . DS;
-                }
             }
         }
-        $controller_path = _MODULE_APP_DIR_ . DS . 'controllers' . DS . $controller_path . '.php';
-        $controller_name = ucfirst($controller_explode[$len - 1]);
-        if (file_exists($controller_path)) {
-            require_once $controller_path;
-            $class_name = 'Controller_' . $controller_name;
-            $class      = new $class_name();
+        $controller_names = array($controller_name,$controller_name.'/index');
+        foreach ($controller_names as $name){
+            $id = '';
+            preg_match("/\/.+\/id\/(.+)/", $name, $match);
+            if(isset($match[1])){
+                $id = $match[1];
+                $name = str_replace('/id/'.$id,'',$controller_name);
+            }
+            $controller_explode = explode('/', $name);
+            $len                = count($controller_explode);
+            $controller_path = '';
+            if ($len == 1) {
+                if($name == 'admin' && $name != Bootstrap::getConfig('admin_url')){
+                    return false;
+                }
+                if($name == Bootstrap::getConfig('admin_url')){
+                    return self::getBaseControllerAdmin();
+                }
+                $controller_path = ucfirst($name);
+            } else {
 
-            return $class;
+                if($controller_explode[0]== 'admin' && $controller_explode[0] != Bootstrap::getConfig('admin_url')){
+                    return false;
+                }
+                if($controller_explode[0] == Bootstrap::getConfig('admin_url')){
+                    $controller_explode[0] = 'Admin';
+                }
+
+                foreach ($controller_explode as $path) {
+                    if (!$controller_path) {
+                        $controller_path = ucfirst($path);
+                    }else{
+                        $controller_path .= DS . ucfirst($path);
+                    }
+                }
+            }
+            $name = str_replace('/','_',$controller_path);
+            $controller_path = _MODULE_APP_DIR_ . DS . 'controllers' . DS . $controller_path . '.php';
+            if (file_exists($controller_path)) {
+                require_once $controller_path;
+                $class_name = 'Controller_' . $name;
+
+                $class      = new $class_name();
+                if($id){
+                    $class->_construct($id);
+                }
+
+                return $class;
+            }
         }
 
         return null;
@@ -237,22 +292,20 @@ class Bootstrap
 
     public static function getVersionInstall()
     {
-        $version_file = _MODULE_APP_DIR_ . DS . 'etc' . DS . 'version';
-        if (!file_exists($version_file)) {
-            return '0.0.0';
-        }
-        $version = file_get_contents($version_file);
-        $version = trim($version);
+//        $version_file = _MODULE_APP_DIR_ . DS . 'etc' . DS . 'version';
+//        if (!file_exists($version_file)) {
+//            return '0.0.0';
+//        }
+//        $version = file_get_contents($version_file);
+//        $version = trim($version);
 
-        return $version;
+        return self::getConfig('version','0.0.0');
     }
 
-    public static function setVersionInstall($version)
+    public static function setVersionInstall($version = '1.0.0')
     {
-        $version_file = _MODULE_APP_DIR_ . DS . 'etc' . DS . 'version';
-        @file_put_contents($version_file, $version);
+        self::setConfig('version',$version);
 
-        return;
     }
 
     public static function log($msg, $log_type = 'exception')
@@ -287,6 +340,7 @@ class Bootstrap
         }
         return $pageURL;
     }
+
     public static function getModel($name = null)
     {
         if(!$name){
@@ -308,6 +362,26 @@ class Bootstrap
         $model_name = 'Model';
         $model = new $model_name();
         return $model;
+    }
+    public static function getBaseController()
+    {
+        $controller_name = 'Controller';
+        $controller = new $controller_name();
+        return $controller;
+    }
+    public static function getBaseControllerAdmin()
+    {
+        $controller_path = _MODULE_APP_DIR_ . DS . 'controllers' . DS . 'Admin' .DS. 'Index.php';
+        $controller_name = 'Admin_Index';
+//        var_dump($controller_path);exit;
+        if (file_exists($controller_path)) {
+            require_once $controller_path;
+            $class_name = 'Controller_' . $controller_name;
+            $class      = new $class_name();
+
+            return $class;
+        }
+        return null;
     }
     public static function convertPathUppercase($name, $char = '/')
     {

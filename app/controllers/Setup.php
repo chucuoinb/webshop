@@ -8,6 +8,12 @@
 
 class Controller_Setup extends Controller
 {
+    const TITLE = 'setup';
+    public function __construct()
+    {
+        $this->_title = self::TITLE;
+    }
+
     protected $_install;
     protected $_notice;
     protected $_installAction = array(
@@ -38,7 +44,7 @@ class Controller_Setup extends Controller
     public function run(){
 //        $this->deleteNotice();exit;
         if(empty($_POST))   {
-            $this->_render('setup.tpl');
+            $this->_render('setup');
             return;
         }
         $function = $this->getParam('action');
@@ -79,7 +85,7 @@ class Controller_Setup extends Controller
                 if (!$success){
                     $this->responseError(null,$msg);
                 }
-                $template_path = Bootstrap::getTemplate('setup/install.tpl');
+                $template_path = Bootstrap::getTemplate('setup/install');
                 ob_start();
                 include $template_path;
                 $html = ob_get_contents();
@@ -100,48 +106,55 @@ class Controller_Setup extends Controller
         $notice = $this->getNotice();
         $class_install = $notice['class_install'];
         $base_model = Bootstrap::getBaseModel();
-        if($notice[$class_install]['status'] == 'process' && version_compare($base_model->getVersionInstall($class_install),'1.0.0')<0){
-            require_once _MODULE_APP_DIR_ . DS . 'setup' . DS . ucfirst($class_install).'.php';
-            $class_name = 'Setup_Install_'.ucfirst($class_install);
-            $install = new $class_name();
-            $function_install = $notice[$class_install]['function'];
-            $install_result = $install->install($function_install);
-            if($install_result['result'] != 'success'){
-                $this->responseAjaxJson($install_result);
-            }
-            $msg = $install_result['msg'];
-            $install_data = $install_result['data'];
-            if($install_data['status'] == 'process'){
-                $function_install_next = $install_data['function'];
-                $notice[$class_install]['status'] = 'process';
-                $notice[$class_install]['function'] = $function_install_next;
+        if(version_compare($base_model->getVersionInstall($class_install),'1.0.0')<0){
+            if($notice[$class_install]['status'] == 'process'){
+                require_once _MODULE_APP_DIR_ . DS . 'setup' . DS . ucfirst($class_install).'.php';
+                $class_name = 'Setup_Install_'.ucfirst($class_install);
+                $install = new $class_name();
+                $function_install = $notice[$class_install]['function'];
+                $install_result = $install->install($function_install);
+                if($install_result['result'] != 'success'){
+                    $this->responseAjaxJson($install_result);
+                }
+                $msg = $install_result['msg'];
+                $install_data = $install_result['data'];
+                if($install_data['status'] == 'process'){
+                    $function_install_next = $install_data['function'];
+                    $notice[$class_install]['status'] = 'process';
+                    $notice[$class_install]['function'] = $function_install_next;
+                    $this->saveNotice($notice);
+                    $this->responseAjaxJson(array(
+                        'result' => 'process',
+                        'msg' => $msg,
+                    ));
+                }else{
+                    $base_model->setVersionInstall($class_install);
+                }
+                $next_install = $this->_nextInstall[$class_install];
+                if(!$next_install){
+                    $template_path = Bootstrap::getTemplate('setup/setup_web');
+                    ob_start();
+                    include $template_path;
+                    $html = ob_get_contents();
+                    ob_end_clean();
+                    $this->responseSuccess($html);
+                }
+                $notice[$class_install]['status'] = 'success';
+                $notice['class_install'] = $next_install;
                 $this->saveNotice($notice);
                 $this->responseAjaxJson(array(
                     'result' => 'process',
                     'msg' => $msg,
                 ));
             }
-            $next_install = $this->_nextInstall[$class_install];
-            if(!$next_install){
-                $template_path = Bootstrap::getTemplate('setup/setup_web.tpl');
-                ob_start();
-                include $template_path;
-                $html = ob_get_contents();
-                ob_end_clean();
-                $this->responseSuccess($html);
-            }
-            $notice[$class_install]['status'] = 'success';
-            $notice['class_install'] = $next_install;
-            $this->saveNotice($notice);
-            $this->responseAjaxJson(array(
-                'result' => 'process',
-                'msg' => $msg,
-            ));
+        }else{
+
         }
-        $base_model->setVersionInstall($class_install);
+
+
         $next_install = $this->_nextInstall[$class_install];
         if(!$next_install){
-            $template_path = Bootstrap::getTemplate('setup/setup_web.tpl');
+            $template_path = Bootstrap::getTemplate('setup/setup_web');
             ob_start();
             include $template_path;
             $html = ob_get_contents();
@@ -176,7 +189,13 @@ class Controller_Setup extends Controller
             $model_account->setData($data);
             try{
                 $model_account->save();
-                $this->responseSuccess();
+                Bootstrap::setVersionInstall('1.0.0');
+                $template_path = Bootstrap::getTemplate('setup/finish');
+                ob_start();
+                include $template_path;
+                $html = ob_get_contents();
+                ob_end_clean();
+                $this->responseSuccess($html);
             }catch (Exception $e){
                 $this->responseError('',$e->getMessage());
             }

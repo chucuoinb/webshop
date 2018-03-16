@@ -1,1 +1,1 @@
-{"db_host":"localhost","db_username":"root","db_password":"123456","db_name":"webshop","db_prefix":"namlv_"}
+{"db_host":"localhost","db_username":"root","db_password":"123456","db_name":"webshop","db_prefix":"namlv_","admin_url":"admin123","version":"1.0.0"}

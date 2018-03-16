@@ -184,18 +184,19 @@ class Setup_Install_Product extends Model
             'table' => self::TABLE_PRODUCT,
             'rows' => array(
                 'id' => 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'attribute_set' => 'SMALLINT(5) NOT NULL',
                 'name' => 'VARCHAR(255) NOT NULL',
                 'sku' => 'VARCHAR(255) NOT NULL',
+                'price' => 'decimal(12,4) NOT NULL',
                 'status' => 'TINYINT(2)',
-                'create_at' => 'DATETIME',
-                'update_at' => 'DATETIME',
+                'created_at' => 'DATETIME',
+                'updated_at' => 'DATETIME',
                 'description' => 'TEXT',
                 'url_key' => 'VARCHAR(255) NOT NULL',
-                'attribute_set' => 'SMALLINT(5) NOT NULL'
             ),
             'references' => array(
                 'attribute_set' => array(
-                    'table' =>self::TABLE_ATTRIBUTE_GROUP,
+                    'table' =>self::TABLE_ATTRIBUTE_SET,
                     'row' => 'id',
                 )
             ),
@@ -478,7 +479,7 @@ class Setup_Install_Product extends Model
 
 
         );
-        return $this->createTableQuery($table_construct,true);
+        return $this->createTableQuery($table_construct,'',true);
     }
     public function addAttributeDefault(){
         $truncate = $this->truncateTable(self::TABLE_ATTRIBUTE);

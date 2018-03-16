@@ -5,6 +5,7 @@ class Setup_Install_Core extends Model{
     const TABLE_ADMIN_ACCOUNT = 'admin_account';
     const TABLE_CONFIG_DATA = 'config_data';
     const TABLE_CUSTOMER_GROUP = 'customer_group';
+    const TABLE_ORDER_STATUS = 'order_status';
     const TABLE_MEDIA = 'media_gallery';
     const TABLE_URL_REWRITE = 'url_rewrite';
 
@@ -73,11 +74,12 @@ class Setup_Install_Core extends Model{
                 'password' => 'VARCHAR(255) NOT NULL',
                 'first_name' => 'VARCHAR(255) ',
                 'last_name' => 'VARCHAR(255) ',
-                'create_at' => 'DATETIME',
-                'update_at' => 'DATETIME',
+                'created_at' => 'DATETIME',
+                'updated_at' => 'DATETIME',
                 'is_active' => 'TINYINT(2)',
                 'log_date' => 'LONGTEXT',
                 'token' => 'TEXT',
+                'token_created_at' => 'DATETIME',
                 'role_id' => 'BIGINT NOT NULL',
                 'last_login' => 'DATETIME'
             ),
@@ -112,9 +114,32 @@ class Setup_Install_Core extends Model{
                 ),
             ),
         );
-        $result = $this->createTableQuery($table_construct,'createMediaGalleryTable');
+        $result = $this->createTableQuery($table_construct,'createOrderStatusTable');
         if($result['result'] == 'success'){
             $add_data = $this->addDataDefaultCustomerGroup();
+            if($add_data['result'] != 'success'){
+                return $add_data;
+            }
+        }
+        return $result;
+    }
+    function createOrderStatusTable(){
+        $table_construct = array(
+            'table' => self::TABLE_ORDER_STATUS,
+            'rows' => array(
+                'id' => 'SMALLINT(5) NOT NULL AUTO_INCREMENT PRIMARY KEY',
+                'status' => 'VARCHAR(32) NOT NULL',
+                'label' => 'VARCHAR(32)'
+            ),
+            'unique' => array(
+                array(
+                    'status',
+                ),
+            ),
+        );
+        $result = $this->createTableQuery($table_construct,'createMediaGalleryTable');
+        if($result['result'] == 'success'){
+            $add_data = $this->addDataDefaultOrderStatus();
             if($add_data['result'] != 'success'){
                 return $add_data;
             }
@@ -202,15 +227,52 @@ class Setup_Install_Core extends Model{
             'msg' => '',
         );
     }
+    function addDataDefaultOrderStatus(){
+        $insert_data = array(
+            0 => array(
+                'status' => 'canceled',
+                'label' => 'Canceled',
+            ),
+            1 => array(
+                'status' => 'complete',
+                'label' => 'Complete'
+            ),
+            2 => array(
+                'status' => 'pending',
+                'label' => 'Pending'
+            )
+        );
+        $truncate = $this->truncateTable(self::TABLE_ORDER_STATUS);
+        if(!$truncate || $truncate['result'] != 'success'){
+            return $this->errorConnectDatabase($truncate['msg']);
+        }
+        foreach ($insert_data as $key=>$data){
+            $res = $this->insertTable(self::TABLE_ORDER_STATUS,$data);
+            if(!$res || $res['result'] != 'success'){
+                return $this->errorConnectDatabase($res['msg']);
+            }
+        }
+        return array(
+            'result' => 'success',
+            'msg' => '',
+        );
+    }
 
     function getRoleAdminDefault(){
         return json_encode(array(
-            'category' => true,
-            'product' => true,
-            'customer' => true,
-            'order' => true,
-            'super_admin' => true,
+            'category' => $this->getFullRoleDefault(),
+            'product' => $this->getFullRoleDefault(),
+            'customer' => $this->getFullRoleDefault(),
+            'order' => $this->getFullRoleDefault(),
+            'super_admin' => $this->getFullRoleDefault(),
         ));
+    }
+    function getFullRoleDefault(){
+        return array(
+            'view' => true,
+            'edit' => true,
+            'delete' => true,
+        );
     }
 
 }

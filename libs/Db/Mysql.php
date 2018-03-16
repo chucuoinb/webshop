@@ -155,10 +155,7 @@ class Libs_Db_Mysql
                 Bootstrap::log('Database ' . $db_name . 'not exists.', 'mysql');
                 return null;
             }
-            $charset = Bootstrap::getConfigIni('db_charset');
-            if($charset){
-                mysql_set_charset($charset, $connect);
-            }
+            mysql_set_charset('utf8', $connect);
             return $connect;
         } catch (Exception $e){
             Bootstrap::log($e->getMessage(), 'mysql');
@@ -189,6 +186,47 @@ class Libs_Db_Mysql
     /**
      * TODO: QUERY
      */
+    public function countTable($table){
+        $query = "SELECT COUNT(1) FROM `{$this->getTableName($table)}`";
+        $count = $this->selectRaw($query);
+        if(isset($count['data'][0]['COUNT(1)'])){
+            return $count['data'][0]['COUNT(1)'];
+        }
+        return 0;
+    }
+    public function selectPage($table,$where = null,$select_field = '*',$limit = '',$pages = 1,$order_by = 'id'){
+        $conn = $this->getConnect();
+        if(!$conn){
+            return array(
+                'result' => 'error',
+                'msg' => self::MSG_ERR,
+                'data' => null
+            );
+        }
+        if(is_array($select_field)){
+            $select_field = implode(',',$select_field);
+        }
+        $table_name = $this->getTableName($table);
+        $query = "SELECT " . $select_field . " FROM `" . $table_name . "`";
+        if($where){
+            if(is_string($where)){
+                $query .= " WHERE " . $where;
+            } else if(is_array($where)){
+                $where_condition = $this->arrayToWhereCondition($where);
+                $query .= " WHERE " . $where_condition;
+            } else {
+
+            }
+        }
+        if($limit){
+            $query .= " ORDER BY `{$order_by}` LIMIT {$limit} ";
+            $offset = ($pages - 1)*$limit;
+            if($offset > 0){
+                $query .= "OFFSET {$offset}";
+            }
+        }
+        return $this->selectRaw($query);
+    }
     public function selectRaw($query)
     {
         try{
@@ -315,6 +353,9 @@ class Libs_Db_Mysql
                 'msg' => self::MSG_ERR,
                 'data' => null
             );
+        }
+        if(is_array($select_field)){
+            $select_field = implode(',',$select_field);
         }
         $table_name = $this->getTableName($table);
         $query = "SELECT " . $select_field . " FROM `" . $table_name . "`";

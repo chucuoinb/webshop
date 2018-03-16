@@ -150,10 +150,7 @@ class Libs_Db_Mysqli
                 Bootstrap::log('Could not connect to database: ' . $db_host . ' ' . $db_username . '/' . $db_password . ' ' . $db_name, 'mysqli');
                 return null;
             }
-            $charset = Bootstrap::getConfigIni('db_charset');
-            if($charset){
-                mysqli_set_charset($connect, $charset);
-            }
+            mysqli_set_charset($connect, 'utf8');
             return $connect;
         } catch(Exception $e){
             Bootstrap::log($e->getMessage(), 'mysqli');
@@ -176,7 +173,6 @@ class Libs_Db_Mysqli
                 $this->refreshConnect();
             }
         } else {
-            var_dump(1);exit;
             $this->_conn = $this->_createConnect();
         }
         return $this->_conn;
@@ -185,6 +181,16 @@ class Libs_Db_Mysqli
     /**
      * TODO: QUERY
      */
+
+
+    public function countTable($table){
+        $query = "SELECT COUNT(1) FROM `{$this->getTableName($table)}`";
+        $count = $this->selectRaw($query);
+        if(isset($count['data'][0]['COUNT(1)'])){
+            return $count['data'][0]['COUNT(1)'];
+        }
+        return 0;
+    }
     public function selectRaw($query)
     {
         try {
@@ -303,6 +309,40 @@ class Libs_Db_Mysqli
         }
     }
 
+    public function selectPage($table,$where = null,$select_field = '*',$limit = '',$page = 1,$order_by = 'id'){
+        $conn = $this->getConnect();
+        if(!$conn){
+            return array(
+                'result' => 'error',
+                'msg' => self::MSG_ERR,
+                'data' => null
+            );
+        }
+        if(is_array($select_field)){
+            $select_field = implode(',',$select_field);
+        }
+        $table_name = $this->getTableName($table);
+        $query = "SELECT " . $select_field . " FROM `" . $table_name . "`";
+        if($where){
+            if(is_string($where)){
+                $query .= " WHERE " . $where;
+            } else if(is_array($where)){
+                $where_condition = $this->arrayToWhereCondition($where);
+                $query .= " WHERE " . $where_condition;
+            } else {
+
+            }
+        }
+        if($limit){
+            $query .= " ORDER BY `{$order_by}` LIMIT {$limit} ";
+            $offset = ($page - 1)*$limit;
+            if($offset > 0){
+                $query .= "OFFSET {$offset}";
+            }
+        }
+        return $this->selectRaw($query);
+    }
+
     public function selectObj($table, $where = null, $select_field = '*')
     {
         $conn = $this->getConnect();
@@ -312,6 +352,9 @@ class Libs_Db_Mysqli
                 'msg' => self::MSG_ERR,
                 'data' => null
             );
+        }
+        if(is_array($select_field)){
+            $select_field = implode(',',$select_field);
         }
         $table_name = $this->getTableName($table);
         $query = "SELECT " . $select_field . " FROM `" . $table_name . "`";

@@ -5,27 +5,11 @@ $notice = $this->getNotice();
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Setup</title>
-    <?php $cssFile = $this->getGlobal('cssFile'); ?>
-    <?php foreach ($cssFile as $css_file): ?>
-        <link type="text/css" rel="stylesheet" media="screen" href="<?php echo Bootstrap::getUrl($css_file); ?>"/>
-    <?php endforeach; ?>
-
-    <?php $jsFile = $this->getGlobal('jsFile'); ?>
-    <?php foreach ($jsFile as $js_file): ?>
-        <script type="text/javascript" src="<?php echo Bootstrap::getUrl($js_file); ?>"></script>
-    <?php endforeach; ?>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $.Webshop({
-                url: '<?php echo Bootstrap::getUrl().'/'?>',
-            });
-        });
-    </script>
+    <?php echo $this->generateHeader();?>
 </head>
 <body>
 <div class="container">
-    <div class="js-install-logo">WEBSHOP INSTALL</div>
+    <div class="install-logo">WEBSHOP INSTALL</div>
     <div class="row webshop-install">
         <div class="col-md-3">
             <div class="install-progress">
@@ -44,9 +28,10 @@ $notice = $this->getNotice();
                 <h1 class="pull-left" id="js-install-content-title">Database Configuration</h1>
             </div>
             <div class="padding-10">
-                <div id="js-setup-config-database"><?php include Bootstrap::getTemplate('setup/config.tpl')?></div>
-                <div id="js-setup-install-database"><?php //include Bootstrap::getTemplate('setup/install.tpl')?></div>
-                <div id="js-setup-install-web"><?php //include Bootstrap::getTemplate('setup/setup_web.tpl')?></div>
+                <div id="js-setup-config-database"><?php include Bootstrap::getTemplate('setup/config')?></div>
+                <div id="js-setup-install-database"><?php //include Bootstrap::getTemplate('setup/install')?></div>
+                <div id="js-setup-install-web"><?php //include Bootstrap::getTemplate('setup/setup_web')?></div>
+                <div id="js-setup-install-finish"><?php //include Bootstrap::getTemplate('setup/finish')?></div>
 
             </div>
         </div>

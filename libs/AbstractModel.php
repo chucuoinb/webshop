@@ -16,5 +16,5 @@ interface Abstract_Model
     public function load($id);
     public function save();
     public function setData($data);
-    public function syncDataConstruct();
+    public function beforeSave();
 }

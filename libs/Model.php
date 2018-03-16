@@ -7,15 +7,17 @@
  */
 class Model implements Abstract_Model {
     protected $_db;
-
-
-
     protected $_main_table;
     protected $_data;
+    protected $_limit;
+    protected $_page;
+    protected $_sort;
+    protected $_select_field;
     protected $_data_filter = array();
     protected $table_construct = array();
     public function __construct()
     {
+        $this->_main_table = 'setup_database';
         if (!$this->_db) {
             $dbConfig = Bootstrap::getDbConfig();
             $db       = Libs_Db::getInstance($dbConfig);
@@ -49,26 +51,29 @@ class Model implements Abstract_Model {
     /**
      * TODO: DATABASE
      */
-
+    public function countTable($table){
+        return $this->_db->countTable($table);
+    }
+    public function selectPage($table,$where = null,$select_field = '*',$limit = '',$pages = 1,$order_by = 'id'){
+        $page_data = $this->_db->selectPage($table,$where ,$select_field ,$limit,$pages,$order_by);
+        if($page_data['result'] == 'success'){
+            return $page_data['data'];
+        }
+        return array();
+    }
     public function selectTable($table, $where = null)
     {
-        $result = array();
-        $select = $this->_db->selectObj($table, $where);
-        if ($select && $select['result'] == 'success') {
-            $result = $select['data'];
-        }
-
-        return $result;
+        return $this->_db->selectObj($table, $where);
     }
 
     public function selectTableRow($table, $where = null)
     {
         $rows = $this->selectTable($table, $where);
-        if (!$rows) {
+        if (!$rows || $rows['result'] != 'success') {
             return false;
         }
 
-        return isset($rows[0]) ? $rows[0] : false;
+        return isset($rows['data'][0]) ? $rows['data'][0] : false;
     }
 
     public function insertTable($table, $data, $insert_id = true)
@@ -87,7 +92,7 @@ class Model implements Abstract_Model {
 
     public function updateTable($table, $data, $where = null)
     {
-        return  $this->_db->updateObj($table, $data . $where);
+        return  $this->_db->updateObj($table, $data , $where);
     }
 
     public function deleteTable($table, $where = null)
@@ -158,11 +163,18 @@ class Model implements Abstract_Model {
     public function unsetConfig($key){
         return Bootstrap::unsetConfig($key);
     }
-    public function errorConnectDatabase($msg = null){
+    public function errorConnectDatabase($msg = MSG_ERROR){
         return array(
             'result' => 'error',
-            'msg' => $this->consoleError($msg?$msg:'not connect database'),
+            'msg' => $this->consoleError($msg),
             'data' => array(),
+        );
+    }
+    public function responseSuccess($msg = '',$data = ''){
+        return array(
+            'result' => 'success',
+            'msg' => $msg,
+            'data' => $data
         );
     }
     public function getTableName($table){
@@ -291,8 +303,24 @@ class Model implements Abstract_Model {
     public function filter()
     {
         // TODO: Implement filter() method.
-        $filter = $this->selectTable($this->_main_table,$this->_data_filter);
-        return $filter;
+        $limit = $this->_limit?$this->_limit:'';
+        $page = $this->_page?$this->_page:1;
+        $select_field = $this->_select_field?$this->_select_field:'*';
+        $sort = $this->_sort?$this->_sort:'id';
+        $filter = $this->selectPage($this->_main_table,$this->_data_filter,$select_field,$limit,$page,$sort);
+        $this->afterFilter();
+        if($filter){
+            return $limit==1?$filter[0]:$filter;
+        }
+        return false;
+    }
+
+    public function afterFilter(){
+        $this->_data_filter = array();
+        $this->_sort = null;
+        $this->_page = null;
+        $this->_limit = null;
+        $this->_select_field = null;
     }
 
     public function addFieldToFilter($key,$value)
@@ -301,7 +329,9 @@ class Model implements Abstract_Model {
         $this->_data_filter[$key] = $value;
         return $this;
     }
-
+    public function getId(){
+        return $this->getData('id');
+    }
     public function addDataFilter($data)
     {
         // TODO: Implement addDataFilter() method.
@@ -317,6 +347,14 @@ class Model implements Abstract_Model {
     public function save()
     {
         // TODO: Implement save() method.
+        $this->_data = $this->beforeSave();
+        $insert = $this->insertTable($this->_main_table,$this->_data);
+        if($insert['result'] != 'success'){
+            $this->throwException($insert['msg']);
+        }
+        $id = $insert['data'];
+        $this->addData('id',$id);
+        return $id;
     }
     public function addData($key, $value)
     {
@@ -333,14 +371,49 @@ class Model implements Abstract_Model {
         $filter = $this->selectTableRow($this->_main_table,array('id' => $id));
         if($filter){
             $this->setData($filter);
-            $this->syncDataConstruct();
             return $this;
         }
         return false;
     }
 
-    public function syncDataConstruct()
+    public function beforeSave()
     {
         // TODO: Implement syncDataConstruct() method.
+        return $this->_data;
     }
+    public function getDataUpdate(){
+        $data = $this->getData();
+        if(isset($data['id'])){
+            unset($data['id']);
+        }
+        return $data;
+    }
+    public function setLimit($limit){
+        $this->_limit = $limit;
+        return $this;
+    }
+    public function setPageFilter($page){
+        $this->_page = $page;
+        return $this;
+    }
+    public function setSelectField($select_field){
+        $this->_select_field = $select_field;
+        return $this;
+    }
+
+    public function setSort($sort){
+        $this->_sort = $sort;
+        return $this;
+    }
+    public function getTotalNumberPage(){
+        if(!$this->_main_table){
+            return 0;
+        }
+        if(!$this->_limit){
+            return 1;
+        }
+        $count = $this->countTable($this->_main_table);
+        return ceil($count/$this->_limit);
+    }
+
 }

@@ -17,6 +17,7 @@ $.extend({
             msgTryError: '<p class="console-error">Something error or server isn\'t responding, please try again.</p>',
             msgTryWarning: '<p class="console-warning">Please try again.</p>',
             msgTryInstall: '<p class="console-success"> - Resuming install ...</p>',
+            msgErrorRetypePassword: "Nhập lại password chưa đúng",
             delay: 1000,
             retry: 30000
         };
@@ -65,6 +66,11 @@ $.extend({
                 if (!check) {
                     return false;
                 }
+                if(!checkRetypePassword("#admin_password","#admin_repassword")){
+                    $("#admin_repassword_error").text(settings.msgErrorRetypePassword);
+                    return false;
+                }
+                $("#admin_repassword_error").text('');
                 var loading = $('#form-loading');
 
                 loading.show();
@@ -76,7 +82,12 @@ $.extend({
                     data: from_data,
                     success: function (response, textStatus, errorThrown) {
                         if (response.result == 'success') {
-
+                            $('#js-setup-install-finish').html(response.data);
+                            $('#js-install-content-title').text('Install Success')
+                            $('#js-setup-install-web').hide();
+                            $('#js-setup-install-finish').show();
+                            successInstall('#install-title-admin');
+                            activeInstall('#install-title-finish');
                         } else {
                             var msg = response.msg.length>0?response.msg:settings.errorMsg;
                             alert(msg);
@@ -95,7 +106,10 @@ $.extend({
                 consoleLog(settings.msgTryInstall);
                 installDatabase();
             });
+
         }
+
+
 
         function installDatabase() {
             var loading = $('#form-loading');
@@ -138,6 +152,12 @@ $.extend({
                     autoRetry('btn-retry-install-wrap');
                 }
             });
+        }
+
+        function checkRetypePassword(password,retypePassword){
+            password = $(password);
+            retypePassword = $(retypePassword);
+            return password.val() == retypePassword.val();
         }
 
         function hideElement(element) {
